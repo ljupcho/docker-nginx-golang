@@ -1,0 +1,71 @@
+version: "3.4"
+
+services:
+    nginx:
+      build:
+        context: ./nginx
+      container_name: go_nginx
+      volumes:
+        - ${APP_CODE_WEB_PATH_HOST}:${APP_CODE_WEB_PATH_CONTAINER}
+        - ${NGINX_WEB_HOST_LOG_PATH}:/var/log/nginx
+        - ${NGINX_WEB_SITE_PATH}:/etc/nginx/sites-available/web.conf
+        - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+      ports:
+        - "${NGINX_WEB_HOST_HTTP_PORT}:80"
+        - "${NGINX_WEB_HOST_HTTPS_PORT}:443"
+      depends_on:
+        - web
+      links:
+        - web  
+      networks:
+        - frontend
+
+    web:
+      build:
+        context: ./go/morningo
+        args:
+          - GO_VERSION=${GO_VERSION}
+      container_name: go_web
+      volumes:
+        - ${APP_CODE_WEB_PATH_HOST}:${APP_CODE_WEB_PATH_CONTAINER}   
+      expose:
+        - "9000"
+      depends_on:
+        - db
+      links:
+        - db
+      networks:
+        - backend    
+
+    db:
+      build:
+        context: ./mysql
+        args:
+          - MYSQL_VERSION=${MYSQL_VERSION}
+      container_name: go_db
+      environment:
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_USER=${MYSQL_USER}
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+        - TZ=${WORKSPACE_TIMEZONE}
+      volumes:
+        - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
+        - ${MYSQL_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+      ports:
+        - "${MYSQL_PORT}:3306"
+      networks:
+        - backend
+
+networks:
+  frontend:
+    driver: ${NETWORKS_DRIVER}
+  backend:
+    driver: ${NETWORKS_DRIVER}
+
+volumes:
+  db:
+    driver: ${VOLUMES_DRIVER}   
+  redis:
+    driver: ${VOLUMES_DRIVER} 
+
