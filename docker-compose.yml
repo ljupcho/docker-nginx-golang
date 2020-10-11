@@ -1,4 +1,4 @@
-version: "3.4"
+version: "3.6"
 
 services:
     nginx:
@@ -18,11 +18,11 @@ services:
       links:
         - web  
       networks:
-        - frontend
+        - frontend   
 
     web:
       build:
-        context: ./go/morningo
+        context: ./morningo
         args:
           - GO_VERSION=${GO_VERSION}
       container_name: go_web
@@ -30,12 +30,16 @@ services:
         - ${APP_CODE_WEB_PATH_HOST}:${APP_CODE_WEB_PATH_CONTAINER}   
       expose:
         - "9000"
+      ports:
+        - "9000"
+      restart: "always"
       depends_on:
         - db
       links:
         - db
       networks:
-        - backend    
+        - frontend
+        - backend
 
     db:
       build:
