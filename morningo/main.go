@@ -1,25 +1,24 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
+	"github.com/gin-gonic/gin"
+	_ "morningo/modules/log" // 日志
+	// _ "morningo/modules/schedule" // 定时任务
+	"runtime"
+	"morningo/config"
+	"morningo/modules/server"
 )
 
-// handleHello GET /hello
-func handleHello(w http.ResponseWriter, r *http.Request) {
-
-	log.Println(r.Method, r.RequestURI)
-
-	// Returns hello world! as a response
-	fmt.Fprintln(w, "Hello world!")
-}
-
 func main() {
-	// registers handleHello to GET /hello
-	http.HandleFunc("/api/hello", handleHello)
-	// starts the server on port 5000
-	if err := http.ListenAndServe(":9000", nil); err != nil {
-		log.Fatalln(err)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	if config.GetEnv().Debug {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
 	}
+
+	router := initRouter()
+
+	server.Run(router)
 }

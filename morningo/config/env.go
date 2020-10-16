@@ -7,7 +7,7 @@ import "github.com/go-sql-driver/mysql"
 var env = Env{
 	Debug: true,
 
-	ServerPort: "9091",
+	ServerPort: "9000",
 
 	Database: mysql.Config{
 		User:                 "root",

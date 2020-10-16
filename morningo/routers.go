@@ -47,7 +47,7 @@ func initRouter() *gin.Engine {
 
 	// ReverseProxy
 	// router.Use(proxy.ReverseProxy(map[string] string {
-	// 	"localhost:4000" : "localhost:9090",
+	// 	"localhost:10091" : "localhost:9000",
 	// }))
 
 	return router
