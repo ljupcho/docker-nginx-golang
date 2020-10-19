@@ -13,8 +13,6 @@ func init() {
 	log.Println(config.GetEnv().Database.FormatDSN())
 	Model, err = gorm.Open("mysql", config.GetEnv().Database.FormatDSN())
 
-	// db, err := gorm.Open("mysql", "root:root@tcp(go_db:3306)/webgo")
-
 	if err != nil {
 		panic(err)
 	}

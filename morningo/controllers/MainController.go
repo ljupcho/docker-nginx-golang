@@ -12,6 +12,7 @@ import (
 	m "morningo/models"
 	"net/http"
 	"time"
+	"strconv"
 )
 
 func IndexApi(c *gin.Context) {
@@ -110,6 +111,51 @@ func OrmExample(c *gin.Context) {
 		"msg":  "ok",
 		"data": gin.H{
 			"orm_result": user,
+		},
+	})
+}
+
+func CreateUser(c *gin.Context) {
+	var name string = "First"
+	m.Model.Create(&m.User{Name: name, Avatar: "unknown", Sex: 1})
+
+	var user m.User
+	m.Model.First(&user, "name = ?", name)
+	userId := strconv.Itoa(int(user.Model.ID))
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg":  "ok",
+		"data": gin.H{
+			"orm_result": "user created with id:" + userId,
+		},
+	})
+}
+
+func GetUser(c *gin.Context) {
+	var user m.User
+	userId := c.Param("userId")
+
+	if err := m.Model.Where("id = ?", userId).First(&user).Error; err != nil {
+		c.AbortWithStatus(404)
+	} else {
+		c.JSON(http.StatusOK, user)
+	}
+}
+
+func UpdateUser(c *gin.Context) {
+	var user m.User
+	userId := c.Param("userid") 
+	
+	m.Model.First(&user, "id = ?", userId)
+
+	m.Model.Model(&user).Update("avatar", "123456")
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg":  "ok",
+		"data": gin.H{
+			"orm_result": "user L1212 updated",
 		},
 	})
 }
