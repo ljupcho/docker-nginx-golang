@@ -39,7 +39,6 @@ var env = Env{
 	InfoLogPath: "storage/logs/info.log",
 
 	TemplatePath: "frontend/templates",
-
-	//APP_SECRET: "YbskZqLNT6TEVLUA9HWdnHmZErypNJpL",
+	
 	AppSecret: "something-very-secret",
 }
