@@ -30,7 +30,7 @@ restart:
 	./build/$(BINARY_NAME)
 
 deps:
-	$(GOGET) github.com/kardianos/govendor
+	$(GOGET) -u github.com/kardianos/govendor
 	govendor sync
 
 cross:
