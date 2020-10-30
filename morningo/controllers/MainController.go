@@ -12,6 +12,7 @@ import (
 	m "morningo/models"
 	"net/http"
 	"time"
+	"fmt"
 	"strconv"
 )
 
@@ -26,31 +27,31 @@ func IndexApi(c *gin.Context) {
 func DBExample(c *gin.Context) {
 
 	// 数据库插入
-	insertRs, _ := db.Exec("insert into users (name, avatar, sex) values (?, ?, ?)", "人才", "unknown", 1)
+	insertRs, _ := db.Exec("insert into users (first_name, last_name, age) values (?, ?, ?)", "人才", "unknown", 1)
 	insertId, _ := insertRs.LastInsertId()
 	log.Printf("insert id: %d\n", insertId)
 
 	// 数据库更新
-	db.Exec("update users set name = ? where id = ?", "饭桶", insertId)
+	db.Exec("update users set first_name = ? where id = ?", "饭桶", insertId)
 
 	// 数据库中间件
 	_, _ = database.Table("users").Where("id", "=", insertId).Update(database.H{
-		"name": "你好",
+		"first_name": "你好",
 	})
 
 	// 数据库查询
-	rs := db.Query("select name,avatar,id from users where id < ?", 100)
-	log.Println(rs[0]["name"])
+	rs := db.Query("select first_name,last_name,id from users where id < ?", 100)
+	log.Println(rs[0]["first_name"])
 
 	rs1, _ := database.Table("users").
-		Select("name", "avatar", "id").
+		Select("first_name", "last_name", "id").
 		Where("id", "<", 100).
 		All()
 	log.Println(rs1[0])
 
 	// 数据库事务
 	_, _ = db.WithTransaction(func(tx *db.SqlTxStruct) (error, map[string]interface{}) {
-		_, err := tx.Query("select name,avatar,id from users where id < ?", 100)
+		_, err := tx.Query("select first_name,last_name,id from users where id < ?", 100)
 		if err != nil {
 			return err, map[string]interface{}{}
 		}
@@ -92,16 +93,16 @@ func StoreExample(c *gin.Context) {
 func OrmExample(c *gin.Context) {
 
 	// Create
-	m.Model.Create(&m.User{Name: "L1212", Avatar: "unknown", Sex: 1})
+	m.Model.Create(&m.User{FirstName: "L1212", LastName: "unknown"})
 
 	// Read
 	var user m.User
 	m.Model.First(&user, 1) // find user with id 1
 	log.Printf("user model insert %d\n", user.Model.ID)
-	m.Model.First(&user, "name = ?", "L1212") // find user with name l1212
+	m.Model.First(&user, "first_name = ?", "L1212") // find user with name l1212
 
 	// Update
-	m.Model.Model(&user).Update("avatar", "123456")
+	m.Model.Model(&user).Update("last_name", "123456")
 
 	// Delete
 	m.Model.Delete(&user)
@@ -115,20 +116,33 @@ func OrmExample(c *gin.Context) {
 	})
 }
 
-func CreateUser(c *gin.Context) {
-	var name string = "First"
-	m.Model.Create(&m.User{Name: name, Avatar: "unknown", Sex: 1})
+func CreateUsers(c *gin.Context) {
 
-	var user m.User
-	m.Model.First(&user, "name = ?", name)
-	userId := strconv.Itoa(int(user.Model.ID))
+	for i := 1; i < 100; i++ {
+		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(i))
+	    user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: 33}
+	    m.Model.Create(&user)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"msg":  "ok",
+	})
+}
+
+func CreateUser(c *gin.Context) {
+	var name string = "First Name 01"
+	user := m.User{FirstName: name, LastName: "Last Name 01", Email: "testmail@test01.com", Age: 33}
+	m.Model.Create(&user)
+
+	// var user m.User
+	// m.Model.First(&user, "first_name = ?", name)
+	// userId := strconv.Itoa(int(user.Model.ID))
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":  "ok",
-		"data": gin.H{
-			"orm_result": "user created with id:" + userId,
-		},
+		"data": user,
 	})
 }
 
@@ -149,13 +163,13 @@ func UpdateUser(c *gin.Context) {
 	
 	m.Model.First(&user, "id = ?", userId)
 
-	m.Model.Model(&user).Update("avatar", "123456")
+	m.Model.Model(&user).Update("last_name", "Last Name Updated")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":  "ok",
 		"data": gin.H{
-			"orm_result": "user L1212 updated",
+			"orm_result": "user updated",
 		},
 	})
 }
@@ -165,7 +179,7 @@ func CookieSetExample(c *gin.Context) {
 
 	id := c.Param("userid")
 
-	rs := db.Query("select name,avatar,id from users where id = ?", id)
+	rs := db.Query("select first_name,last_name,id from users where id = ?", id)
 
 	log.Printf("len(rs): %d", len(rs))
 	if len(rs) == 0 {
@@ -190,7 +204,7 @@ func CookieGetExample(c *gin.Context) {
 	id, _ := userInfo["id"].(string)
 	log.Println("id: " + id)
 
-	rs := db.Query("select name,avatar,id from users where id = ?", id)
+	rs := db.Query("select first_name,last_name,id from users where id = ?", id)
 
 	// 返回html
 	c.JSON(http.StatusOK, gin.H{

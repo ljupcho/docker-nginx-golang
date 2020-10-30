@@ -15,6 +15,7 @@ func RegisterApiRouter(router *gin.Engine) {
 	api := router.Group("/api")
 	api.GET("/index", controllers.IndexApi)
 	api.GET("/user/:userId", controllers.GetUser)
+	api.GET("/users/bulk", controllers.CreateUsers)
 	api.POST("/user/create", controllers.CreateUser)	
 	api.PUT("/user/:userId/update", controllers.UpdateUser)
 	api.GET("/cookie/set/:userid", controllers.CookieSetExample)
