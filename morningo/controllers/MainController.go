@@ -117,6 +117,7 @@ func OrmExample(c *gin.Context) {
 }
 
 func CreateUsers(c *gin.Context) {
+	startTime := time.Now()
 
 	for i := 1; i < 100; i++ {
 		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(i))
@@ -124,9 +125,11 @@ func CreateUsers(c *gin.Context) {
 	    m.Model.Create(&user)
 	}
 
+	elapsed := time.Since(startTime)
+
 	c.JSON(http.StatusOK, gin.H{
 		"code": 200,
-		"msg":  "ok",
+		"msg":  fmt.Sprintf("ElapsedTime in seconds: %f", elapsed.Seconds()),
 	})
 }
 
