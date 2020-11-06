@@ -14,6 +14,7 @@ import (
 	"time"
 	"fmt"
 	"strconv"
+	mlog "morningo/modules/log"
 )
 
 func IndexApi(c *gin.Context) {
@@ -119,7 +120,7 @@ func OrmExample(c *gin.Context) {
 func CreateUsers(c *gin.Context) {
 	startTime := time.Now()
 
-	for i := 1; i < 100; i++ {
+	for i := 0; i < 10000; i++ {
 		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(i))
 	    user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: 33}
 	    m.Model.Create(&user)
@@ -131,6 +132,46 @@ func CreateUsers(c *gin.Context) {
 		"code": 200,
 		"msg":  fmt.Sprintf("ElapsedTime in seconds: %f", elapsed.Seconds()),
 	})
+}
+
+func CreateUserGoroutines(c *gin.Context) {
+	startTime := time.Now()
+
+	var total int = 1000
+	var chunk int = 100
+
+	mlog.Info(mlog.E{Info: mlog.M{"data": "started",},})
+
+	i := 0
+	for i < total {
+		// run concurrent chunks
+		go func(s int) {
+			mlog.Info(mlog.E{Info: mlog.M{"chunk is:": s,},})
+			for i := 0; i < chunk; i++ {
+				h := s + (i + 1);
+				email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(h))
+    			user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: h}
+    			m.Model.Create(&user)			
+			}			
+		}(i)
+
+		i = i + chunk
+	}
+
+	elapsed := time.Since(startTime)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"msg":  fmt.Sprintf("ElapsedTime in seconds: %f", elapsed.Seconds()),
+	})
+}
+
+func insertUser(i int) {
+	for j:=0; j<i; j++ {
+		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(i))
+		user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: 33}
+		m.Model.Create(&user)	
+	}	
 }
 
 func CreateUser(c *gin.Context) {
