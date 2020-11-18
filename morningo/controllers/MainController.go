@@ -14,6 +14,7 @@ import (
 	"time"
 	"fmt"
 	"strconv"
+	"sync"
 	mlog "morningo/modules/log"
 )
 
@@ -120,9 +121,10 @@ func OrmExample(c *gin.Context) {
 func CreateUsers(c *gin.Context) {
 	startTime := time.Now()
 
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 4000; i++ {
+		var age int = i + 1
 		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(i))
-	    user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: 33}
+	    user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: age}
 	    m.Model.Create(&user)
 	}
 
@@ -134,7 +136,8 @@ func CreateUsers(c *gin.Context) {
 	})
 }
 
-func CreateUserGoroutines(c *gin.Context) {
+
+func CreateUserGoroutinesStandard(c *gin.Context) {
 	startTime := time.Now()
 
 	var total int = 1000
@@ -166,12 +169,53 @@ func CreateUserGoroutines(c *gin.Context) {
 	})
 }
 
-func insertUser(i int) {
-	for j:=0; j<i; j++ {
-		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(i))
-		user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: 33}
-		m.Model.Create(&user)	
-	}	
+func CreateUserGoroutines(c *gin.Context) {
+	startTime := time.Now()
+
+	var total int = 20000
+	// var chunk int = 500
+
+	mlog.Info(mlog.E{Info: mlog.M{"data": "started",},})
+
+	var wg sync.WaitGroup
+	// allow max 7 concurrent workers/threads
+	wg.Add(7)
+	for n := 0; n < 7; n++ {
+        mlog.Info(mlog.E{Info: mlog.M{"added worker:": n,},})
+
+        // each worker processing by 3000 records
+        total_per_worker := 3000
+        offset := total_per_worker * n
+        current_total := total_per_worker * (n + 1 ) 
+        if current_total > total {
+        	total_per_worker = total_per_worker - (current_total - total)
+        }
+
+        go runWorker(total_per_worker, &wg, offset)	
+    }
+
+    // no need to wait for threads to finish
+    // wg.Wait() 
+
+	elapsed := time.Since(startTime)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"msg":  fmt.Sprintf("ElapsedTime in seconds: %f", elapsed.Seconds()),
+	})
+}
+
+func runWorker(total int, wg *sync.WaitGroup, s int) {
+	defer wg.Done()
+
+	mlog.Info(mlog.E{Info: mlog.M{"chunk is:": s,},})
+	for i := 0; i < total; i++ {
+		h := s + (i + 1);
+		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(h))
+		user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: h}
+		m.Model.Create(&user)			
+	}
+	mlog.Info(mlog.E{Info: mlog.M{"chunk finished is:": s,},})
 }
 
 func CreateUser(c *gin.Context) {
