@@ -121,7 +121,7 @@ func OrmExample(c *gin.Context) {
 func CreateUsers(c *gin.Context) {
 	startTime := time.Now()
 
-	for i := 0; i < 4000; i++ {
+	for i := 0; i < 10000; i++ {
 		var age int = i + 1
 		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(i))
 	    user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: age}
@@ -244,6 +244,31 @@ func GetUser(c *gin.Context) {
 		c.JSON(http.StatusOK, user)
 	}
 }
+
+
+func GetUsers(c *gin.Context) {
+	users := []m.User{}
+	
+	m.Model.Limit(100).Order("id desc").Find(&users)
+
+	var new_users = []m.User{}
+    for _, v := range users {
+    	var new_user m.User
+    	m.Model.Where("Email = ?", v.Email).First(&new_user)
+    	new_users = append(new_users, new_user)
+    }
+
+    mlog.Info(mlog.E{Info: mlog.M{"total of returned users:": len(users),},})
+
+    c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"msg":  "ok",
+		"data": gin.H{
+			"data": new_users,
+		},
+	})
+}
+
 
 func UpdateUser(c *gin.Context) {
 	var user m.User
