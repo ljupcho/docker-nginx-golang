@@ -169,6 +169,69 @@ func CreateUserGoroutinesStandard(c *gin.Context) {
 	})
 }
 
+type jobPayload struct {
+	key int
+	chunk int
+}
+
+func CreateUsersWithChannels(c *gin.Context) {
+	var wg sync.WaitGroup
+	// create a channel which will accumulate the jobs
+	// will keep the offset/key and the chunk in jobPayload struct
+	queue := make(chan jobPayload)
+
+	var total int = 20000
+	var chunk int = 500
+
+	// allow max 7 concurrent workers/threads
+	wg.Add(7)
+
+	for n := 0; n < 7; n++ {
+        go func() {
+        	for {
+            	pull_payload, ok := <- queue
+                if !ok { 
+                	// if there is nothing to do and the channel has been closed then end the goroutine
+                    wg.Done()
+                    return
+                }
+
+                insertPayloadWorker(pull_payload)
+            }
+        }()
+    }
+
+	i := 0
+	for i < total {
+		payload := jobPayload{
+			key: i,
+			chunk: chunk}
+		// push it to the channel/queue
+		queue <- payload
+
+		i = i + chunk
+	}
+
+	close(queue)
+	// this will wait until all of goroutines finish to do something else
+    wg.Wait()
+}
+
+func insertPayloadWorker(payload jobPayload) {
+	var s int = payload.key
+	var total int = payload.chunk
+	mlog.Info(mlog.E{Info: mlog.M{"chunk is:": s,},})
+
+	for i := 0; i < total; i++ {
+		h := s + (i + 1);
+		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(h))
+		user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: h}
+		m.Model.Create(&user)			
+	}
+
+	mlog.Info(mlog.E{Info: mlog.M{"chunk finished is:": s,},})
+}
+
 func CreateUserGoroutines(c *gin.Context) {
 	startTime := time.Now()
 
@@ -218,14 +281,12 @@ func runWorker(total int, wg *sync.WaitGroup, s int) {
 	mlog.Info(mlog.E{Info: mlog.M{"chunk finished is:": s,},})
 }
 
+
+
 func CreateUser(c *gin.Context) {
 	var name string = "First Name 01"
 	user := m.User{FirstName: name, LastName: "Last Name 01", Email: "testmail@test01.com", Age: 33}
 	m.Model.Create(&user)
-
-	// var user m.User
-	// m.Model.First(&user, "first_name = ?", name)
-	// userId := strconv.Itoa(int(user.Model.ID))
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
