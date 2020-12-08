@@ -9,8 +9,7 @@ type User struct {
 	LastName string `json:"last_name" form:"last_name"`
 	Email string `json:"email" form:"email"`
 	Age int `json:"age" form:"age"`
-	// CreatedAt time.Time `json:"created_at" form:"created_at"`
-	// UpdatedAt time.Time `json:"updated_at" form:"updated_at"`
+	Posts []Post `gorm:"foreignKey:UserId"`
 }
 
 func (User) TableName() string {

@@ -17,6 +17,7 @@ var env = Env{
 		Collation:            "utf8mb4_unicode_ci",
 		Net:                  "tcp",
 		AllowNativePasswords: true,
+		ParseTime: true,
 	},
 	MaxIdleConns: 50,
 	MaxOpenConns: 100,

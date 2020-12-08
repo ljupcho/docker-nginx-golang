@@ -32,7 +32,6 @@ services:
         - "9000"
       ports:
         - "9000"
-      restart: "always"
       depends_on:
         - db
       links:

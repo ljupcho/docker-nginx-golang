@@ -225,8 +225,15 @@ func insertPayloadWorker(payload jobPayload) {
 	for i := 0; i < total; i++ {
 		h := s + (i + 1);
 		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(h))
-		user := m.User{	FirstName: "First Name 01", LastName: "Last Name 01", Email: email, Age: h}
-		m.Model.Create(&user)			
+		user := m.User{	
+			FirstName: "First Name 01", 
+			LastName: "Last Name 01", 
+			Email: email, 
+			Age: h,
+			Posts: []m.Post{
+				{ Title: "test title", Content: "test content" },
+				{ Title: "test title", Content: "test content" }}}
+		m.Model.Create(&user)	
 	}
 
 	mlog.Info(mlog.E{Info: mlog.M{"chunk finished is:": s,},})
@@ -282,7 +289,6 @@ func runWorker(total int, wg *sync.WaitGroup, s int) {
 }
 
 
-
 func CreateUser(c *gin.Context) {
 	var name string = "First Name 01"
 	user := m.User{FirstName: name, LastName: "Last Name 01", Email: "testmail@test01.com", Age: 33}
@@ -307,16 +313,30 @@ func GetUser(c *gin.Context) {
 }
 
 
+
 func GetUsers(c *gin.Context) {
 	users := []m.User{}
 	
-	m.Model.Limit(100).Order("id desc").Find(&users)
+	m.Model.Preload("Posts").Limit(50).Order("id desc").Find(&users)
+	// m.Model.Limit(50).Order("id desc").Find(&users)
+	
+	type Cdata struct {
+		UserId uint
+		FirstName string
+		Counter int
+	}
 
-	var new_users = []m.User{}
-    for _, v := range users {
-    	var new_user m.User
-    	m.Model.Where("Email = ?", v.Email).First(&new_user)
-    	new_users = append(new_users, new_user)
+	var data []Cdata
+    for _, v := range users {    	
+    	// posts := []m.Post{}
+    	// m.Model.Where("user_id = ?", v.ID).Find(&posts) 
+    	// cnt := len(posts)
+    	cnt := len(v.Posts)
+    	a := Cdata{
+    		UserId: v.ID,
+    		FirstName: v.FirstName,
+    		Counter: cnt}
+    	data = append(data, a)
     }
 
     mlog.Info(mlog.E{Info: mlog.M{"total of returned users:": len(users),},})
@@ -325,11 +345,10 @@ func GetUsers(c *gin.Context) {
 		"code": 200,
 		"msg":  "ok",
 		"data": gin.H{
-			"data": new_users,
+			"data": data,
 		},
 	})
 }
-
 
 func UpdateUser(c *gin.Context) {
 	var user m.User
