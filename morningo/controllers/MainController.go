@@ -118,6 +118,23 @@ func OrmExample(c *gin.Context) {
 	})
 }
 
+func CreateGroups(c *gin.Context) {
+	startTime := time.Now()
+
+	for i := 0; i < 300; i++ {
+		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(i))
+	    group := m.Group{Name: "First Name 01", Phone: "123234", Email: email, City: "Skopje"}
+	    m.Model.Create(&group)
+	}
+
+	elapsed := time.Since(startTime)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"msg":  fmt.Sprintf("ElapsedTime in seconds: %f", elapsed.Seconds()),
+	})
+}
+
 func CreateUsers(c *gin.Context) {
 	startTime := time.Now()
 
@@ -230,6 +247,7 @@ func insertPayloadWorker(payload jobPayload) {
 			LastName: "Last Name 01", 
 			Email: email, 
 			Age: h,
+			GroupID: 200,
 			Posts: []m.Post{
 				{ Title: "test title", Content: "test content" },
 				{ Title: "test title", Content: "test content" }}}
@@ -314,20 +332,54 @@ func GetUser(c *gin.Context) {
 
 func GetUsers(c *gin.Context) {
 	users := []m.User{}
-	m.Model.Preload("Posts").Limit(50).Order("id desc").Find(&users)	
-	
-	type Cdata struct {
-		UserId uint
-		FirstName string
-		Counter int
+	m.Model.Preload("Posts").Preload("Group").Limit(50).Order("id desc").Find(&users)	
+
+	type cPost struct {
+		Title string
+		Content string
 	}
 
-	var data []Cdata
+	type cGroup struct {
+		Name string
+		Phone string
+		City string
+		Email string
+	}
+	
+	type cData struct {
+		UserId uint
+		FirstName string
+		LastName string
+		Email string
+		Age int
+		Group cGroup
+		Posts []cPost
+	}
+
+	var data []cData
     for _, v := range users {
-    	a := Cdata{
+
+    	var mappedPosts []cPost
+    	for _, p := range v.Posts {
+    		mappedPosts = append(mappedPosts, cPost{
+    			Title: p.Title,
+    			Content: p.Content,
+    		})
+    	}
+
+    	a := cData{
     		UserId: v.ID,
     		FirstName: v.FirstName,
-    		Counter: len(v.Posts),
+    		LastName: v.LastName,
+    		Email: v.Email,
+    		Age: v.Age,
+    		Group: cGroup{
+    			Name: v.Group.Name,
+    			Email: v.Group.Email,
+    			Phone: v.Group.Phone,
+    			City: v.Group.City,
+    		},
+	  		Posts: mappedPosts,
     	}
     	data = append(data, a)
     }

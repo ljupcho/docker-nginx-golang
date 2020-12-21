@@ -16,6 +16,7 @@ func RegisterApiRouter(router *gin.Engine) {
 	api.GET("/index", controllers.IndexApi)
 	api.GET("/user/:userId", controllers.GetUser)
 	api.GET("/getUsers", controllers.GetUsers)
+	api.GET("/groups/bulk", controllers.CreateGroups)
 	api.GET("/users/bulk", controllers.CreateUsers)
 	api.GET("/users/run-chan", controllers.CreateUsersWithChannels)
 	api.GET("/users/run-gor", controllers.CreateUserGoroutines)
