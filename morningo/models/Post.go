@@ -1,7 +1,6 @@
 package models
 
 import "github.com/jinzhu/gorm"
-// import "time"
 
 type Post struct {
 	gorm.Model

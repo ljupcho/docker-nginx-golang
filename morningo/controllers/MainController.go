@@ -312,13 +312,9 @@ func GetUser(c *gin.Context) {
 	}
 }
 
-
-
 func GetUsers(c *gin.Context) {
 	users := []m.User{}
-	
-	m.Model.Preload("Posts").Limit(50).Order("id desc").Find(&users)
-	// m.Model.Limit(50).Order("id desc").Find(&users)
+	m.Model.Preload("Posts").Limit(50).Order("id desc").Find(&users)	
 	
 	type Cdata struct {
 		UserId uint
@@ -327,15 +323,12 @@ func GetUsers(c *gin.Context) {
 	}
 
 	var data []Cdata
-    for _, v := range users {    	
-    	// posts := []m.Post{}
-    	// m.Model.Where("user_id = ?", v.ID).Find(&posts) 
-    	// cnt := len(posts)
-    	cnt := len(v.Posts)
+    for _, v := range users {
     	a := Cdata{
     		UserId: v.ID,
     		FirstName: v.FirstName,
-    		Counter: cnt}
+    		Counter: len(v.Posts),
+    	}
     	data = append(data, a)
     }
 

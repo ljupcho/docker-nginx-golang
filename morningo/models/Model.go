@@ -13,6 +13,8 @@ func init() {
 	log.Println(config.GetEnv().Database.FormatDSN())
 	Model, err = gorm.Open("mysql", config.GetEnv().Database.FormatDSN())
 
+	// Model.LogMode(true)
+	// migrate the tables
 	// Model.DropTableIfExists(Post{}, User{})
 	// Model.LogMode(true).AutoMigrate(&User{}, &Post{})
 	// Model.LogMode(true).Model(&Post{}).AddForeignKey("user_id", "users(user_id)", "CASCADE", "CASCADE")
