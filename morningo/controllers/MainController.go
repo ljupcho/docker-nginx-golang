@@ -200,10 +200,10 @@ func CreateUsersWithChannels(c *gin.Context) {
 	var total int = 20000
 	var chunk int = 500
 
-	// allow max 7 concurrent workers/threads
-	wg.Add(7)
+	// allow max 6 concurrent workers/threads
+	wg.Add(6)
 
-	for n := 0; n < 7; n++ {
+	for n := 0; n < 6; n++ {
         go func() {
         	for {
             	pull_payload, ok := <- queue
@@ -239,6 +239,9 @@ func insertPayloadWorker(payload jobPayload) {
 	var total int = payload.chunk
 	mlog.Info(mlog.E{Info: mlog.M{"chunk is:": s,},})
 
+	var group m.Group
+	m.Model.Where("id = ?", 200).First(&group)
+
 	for i := 0; i < total; i++ {
 		h := s + (i + 1);
 		email := fmt.Sprintf("testmail%s@test.com", strconv.Itoa(h))
@@ -247,7 +250,7 @@ func insertPayloadWorker(payload jobPayload) {
 			LastName: "Last Name 01", 
 			Email: email, 
 			Age: h,
-			GroupID: 200,
+			GroupID: group.ID,
 			Posts: []m.Post{
 				{ Title: "test title", Content: "test content" },
 				{ Title: "test title", Content: "test content" }}}
@@ -266,9 +269,9 @@ func CreateUserGoroutines(c *gin.Context) {
 	mlog.Info(mlog.E{Info: mlog.M{"data": "started",},})
 
 	var wg sync.WaitGroup
-	// allow max 7 concurrent workers/threads
-	wg.Add(7)
-	for n := 0; n < 7; n++ {
+	// allow max 6 concurrent workers/threads
+	wg.Add(6)
+	for n := 0; n < 6; n++ {
         mlog.Info(mlog.E{Info: mlog.M{"added worker:": n,},})
 
         // each worker processing by 3000 records
