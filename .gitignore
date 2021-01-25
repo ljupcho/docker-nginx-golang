@@ -1,2 +1,2 @@
-morningo/storage/logs
-morningo/vendor/*
+app/storage/logs
+app/vendor/*

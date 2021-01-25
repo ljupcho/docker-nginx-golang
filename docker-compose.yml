@@ -1,18 +1,18 @@
 version: "3.6"
 
 services:
-    nginx:
+    nginxx:
       build:
         context: ./nginx
-      container_name: go_nginx
+      container_name: go_v1_nginx
       volumes:
         - ${APP_CODE_WEB_PATH_HOST}:${APP_CODE_WEB_PATH_CONTAINER}
         - ${NGINX_WEB_HOST_LOG_PATH}:/var/log/nginx
         - ${NGINX_WEB_SITE_PATH}:/etc/nginx/sites-available/web.conf
         - ${NGINX_SSL_PATH}:/etc/nginx/ssl
       ports:
-        - "${NGINX_WEB_HOST_HTTP_PORT}:80"
-        - "${NGINX_WEB_HOST_HTTPS_PORT}:443"
+        - "3636:80"
+        - "3637:443"
       depends_on:
         - web
       links:
@@ -22,10 +22,15 @@ services:
 
     web:
       build:
-        context: ./morningo
+        context: ./app
         args:
           - GO_VERSION=${GO_VERSION}
-      container_name: go_web
+          - INSTALL_NPM=${INSTALL_NPM}
+          - INSTALL_CRON=${INSTALL_CRON}
+          - INSTALL_GIT=${INSTALL_GIT}
+          - INSTALL_ZIP=${INSTALL_ZIP}
+          - NODE_VERSION=${NODE_VERSION}      
+      container_name: go_v1_web
       volumes:
         - ${APP_CODE_WEB_PATH_HOST}:${APP_CODE_WEB_PATH_CONTAINER}   
       expose:
@@ -34,8 +39,10 @@ services:
         - "9000"
       depends_on:
         - db
+        - redis
       links:
         - db
+        - redis
       networks:
         - frontend
         - backend
@@ -45,7 +52,7 @@ services:
         context: ./mysql
         args:
           - MYSQL_VERSION=${MYSQL_VERSION}
-      container_name: go_db
+      container_name: go_v1_db
       environment:
         - MYSQL_DATABASE=${MYSQL_DATABASE}
         - MYSQL_USER=${MYSQL_USER}
@@ -59,6 +66,16 @@ services:
         - "${MYSQL_PORT}:3306"
       networks:
         - backend
+
+    redis:
+      build: ./redis
+      container_name: go_v1_redis
+      volumes:
+        - ${DATA_PATH_HOST}/redis:/data
+      ports:
+        - "${REDIS_PORT}:6379"
+      networks:
+        - backend          
 
 networks:
   frontend:
