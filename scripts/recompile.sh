@@ -1,7 +1,7 @@
 #!/bin/bash
 
-docker exec -it go_v1_web go install github.com/kardianos/govendor
+docker exec -it go_web go install github.com/kardianos/govendor
 
-# docker exec -it go_v1_web go mod download
-docker exec -it go_v1_web go build -o /go/bin/app -tags=jsoniter -v ./
-docker restart go_v1_web
+docker exec -it go_web make deps
+docker exec -it go_web go build -o /go/bin/morningo -tags=jsoniter -v ./
+docker restart go_web
